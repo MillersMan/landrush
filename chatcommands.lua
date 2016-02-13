@@ -41,12 +41,17 @@ minetest.register_chatcommand("unclaim", {
 		local pos = player:getpos()
 		local owner = landrush.get_owner(pos)
 		local inv = player:get_inventory()
-		if owner then						
+		if owner then
 			if owner == name or minetest.check_player_privs(name, {landrush=true}) then
 				chunk = landrush.get_chunk(pos)
+				if inv:room_for_item("main", landrush.claims[chunk].claimtype) then
+					player:get_inventory():add_item("main", {name=landrush.claims[chunk].claimtype})
 					landrush.claims[chunk] = nil
 					landrush.save_claims()
 					minetest.chat_send_player(name, "You renounced your claim on this area.")
+				else
+					minetest.chat_send_player(name, "Your inventory is full.")
+				end
 			else
 				minetest.chat_send_player(name, "This area is owned by "..owner)
 			end
