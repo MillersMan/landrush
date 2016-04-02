@@ -50,6 +50,12 @@ landrush.load_claims()
 				chunk = landrush.get_chunk(pointed_thing.above)
 				landrush.claims[chunk] = {owner=placer:get_player_name(),shared={},claimtype="landclaim"}
 				landrush.save_claims()
+
+				-- showarea
+				local entpos = landrush.get_chunk_center(pointed_thing.above)
+				entpos.y = (pointed_thing.above.y-1)
+				minetest.env:add_entity(entpos, "landrush:showarea")
+
 				minetest.chat_send_player(landrush.claims[chunk].owner, "You now own this area.")
 				itemstack:take_item()
 				return itemstack
