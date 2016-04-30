@@ -1,4 +1,4 @@
-minetest.log('action','Loading Land Rush Land Claim')
+local load_time_start = os.clock()
 
 -- Freeminer Compatibility
 if rawget(_G, "freeminer") then
@@ -125,3 +125,11 @@ dofile(path.."/chatcommands.lua")
 dofile(path.."/snow.lua")
 
 end )
+
+minetest.log(
+	'action',
+	string.format(
+		'['..minetest.get_current_modname()..'] loaded in %.3fs',
+		os.clock() - load_time_start
+	)
+)
