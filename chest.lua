@@ -12,6 +12,22 @@ local chest_formspec =
 	"listring[current_player;main]" ..
 	default.get_hotbar_bg(0,4.85)
 
+local log_chest_access = function(pos,name,action)
+	minetest.log(
+		"action",
+		name ..
+		" " ..
+		action ..
+		" the shared chest at " ..
+		minetest.pos_to_string(pos)
+	)
+end
+
+local log_chest_access_attempt = function(pos,name,action)
+		action = "tried to " .. action
+		log_chest_access(pos,name,action)
+end
+
 minetest.register_node("landrush:shared_chest", {
 		description = "Land Rush Shared Chest",
 		tiles = {
@@ -52,51 +68,39 @@ minetest.register_node("landrush:shared_chest", {
 				to_list, to_index, count, player
 			)
 
-			local meta = minetest.get_meta(pos)
-			if not landrush.can_interact(pos,player:get_player_name()) then
-				minetest.log(
-					"action",
-					player:get_player_name() ..
-					" tried to access a shared chest at " ..
-					minetest.pos_to_string(pos)
-				)
+			local name = player:get_player_name()
+			if landrush.can_interact(pos,name) then
+				return count
+			else
+				log_chest_access_attempt(pos,name,"move stuff in")
 				return 0
 			end
-			return count
 		end,
 
 		allow_metadata_inventory_put = function(
 				pos, listname, index, stack, player
 			)
 
-			local meta = minetest.get_meta(pos)
-			if not landrush.can_interact(pos,player:get_player_name()) then
-				minetest.log(
-					"action",
-					player:get_player_name() ..
-					" tried to access a shared chest at "..
-					minetest.pos_to_string(pos)
-				)
+			local name = player:get_player_name()
+			if landrush.can_interact(pos,name) then
+				return stack:get_count()
+			else
+				log_chest_access_attempt(pos,name,"put stuff in")
 				return 0
 			end
-			return stack:get_count()
 		end,
 		
 	  allow_metadata_inventory_take = function(
 				pos, listname, index, stack, player
 			)
 
-			local meta = minetest.get_meta(pos)
-			if not landrush.can_interact(pos,player:get_player_name()) then
-				minetest.log(
-					"action",
-					player:get_player_name() ..
-					" tried to access a shared chest at " ..
-					minetest.pos_to_string(pos)
-				)
+			local name = player:get_player_name()
+			if landrush.can_interact(pos,name) then
+				return stack:get_count()
+			else
+				log_chest_access_attempt(pos,name,"take stuff from")
 				return 0
 			end
-			return stack:get_count()
 		end,
 		
 		on_metadata_inventory_move = function(
@@ -104,36 +108,24 @@ minetest.register_node("landrush:shared_chest", {
 				to_list, to_index, count, player
 			)
 
-			minetest.log(
-				"action",
-				player:get_player_name() ..
-				" moves stuff in shared chest at " ..
-				minetest.pos_to_string(pos)
-			)
+			local name = player:get_player_name()
+			log_chest_access(pos,name,"moves stuff in")
 		end,
 		
 	  on_metadata_inventory_put = function(
 				pos, listname, index, stack, player
 			)
 
-			minetest.log(
-				"action",
-				player:get_player_name() ..
-				" puts stuff into shared chest at " ..
-				minetest.pos_to_string(pos)
-			)
+			local name = player:get_player_name()
+			log_chest_access(pos,name,"puts stuff in")
 		end,
 		
 	  on_metadata_inventory_take = function(
 				pos, listname, index, stack, player
 			)
 
-			minetest.log(
-				"action",
-				player:get_player_name() ..
-				" takes stuff from shared chest at " ..
-				minetest.pos_to_string(pos)
-			)
+			local name = player:get_player_name()
+			log_chest_access(pos,name,"takes stuff from")
 		end,
 
 		tube = {
