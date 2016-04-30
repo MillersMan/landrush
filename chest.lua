@@ -1,16 +1,20 @@
 -- add a special chest that is shared among the land-possesors
 
-local chest_formspec =
-	"size[8,9]" ..
-	default.gui_bg ..
-	default.gui_bg_img ..
-	default.gui_slots ..
-	"list[current_name;main;0,0.3;8,4;]" ..
-	"list[current_player;main;0,4.85;8,1;]" ..
-	"list[current_player;main;0,6.08;8,3;8]" ..
-	"listring[current_name;main]" ..
-	"listring[current_player;main]" ..
-	default.get_hotbar_bg(0,4.85)
+local function get_shared_chest_formspec(pos)
+	local spos = pos.x .. "," .. pos.y .. "," .. pos.z
+	local formspec =
+		"size[8,9]" ..
+		default.gui_bg ..
+		default.gui_bg_img ..
+		default.gui_slots ..
+		"list[nodemeta:" .. spos .. ";main;0,0.3;8,4;]" ..
+		"list[current_player;main;0,4.85;8,1;]" ..
+		"list[current_player;main;0,6.08;8,3;8]" ..
+		"listring[nodemeta:" .. spos .. ";main]" ..
+		"listring[current_player;main]" ..
+		default.get_hotbar_bg(0,4.85)
+	return formspec
+end
 
 local log_chest_access = function(pos,name,action)
 	minetest.log(
@@ -57,7 +61,6 @@ minetest.register_node("landrush:shared_chest", {
 
 		on_construct = function(pos)
 			local meta = minetest.get_meta(pos)
-			meta:set_string("formspec",chest_formspec)
 			meta:set_string("infotext", "Shared Chest")
 			local inv = meta:get_inventory()
 			inv:set_size("main", 8*4)
@@ -96,7 +99,7 @@ minetest.register_node("landrush:shared_chest", {
 				return 0
 			end
 		end,
-		
+
 		allow_metadata_inventory_take = function(
 				pos, listname, index, stack, player
 			)
@@ -111,7 +114,7 @@ minetest.register_node("landrush:shared_chest", {
 				return 0
 			end
 		end,
-		
+
 		on_metadata_inventory_move = function(
 				pos, from_list, from_index,
 				to_list, to_index, count, player
@@ -120,7 +123,7 @@ minetest.register_node("landrush:shared_chest", {
 			local name = player:get_player_name()
 			log_chest_access(pos,name,"moves stuff in")
 		end,
-		
+
 		on_metadata_inventory_put = function(
 				pos, listname, index, stack, player
 			)
@@ -130,7 +133,7 @@ minetest.register_node("landrush:shared_chest", {
 			local action = "puts " .. stuff .. " in"
 			log_chest_access(pos,name,action)
 		end,
-		
+
 		on_metadata_inventory_take = function(
 				pos, listname, index, stack, player
 			)
@@ -139,6 +142,17 @@ minetest.register_node("landrush:shared_chest", {
 			local stuff = stack:get_count() .. " " ..stack:get_name()
 			local action = "takes " .. stuff .. " from"
 			log_chest_access(pos,name,action)
+		end,
+
+		on_rightclick = function(pos, node, clicker)
+			local name = clicker:get_player_name()
+			if landrush.can_interact(pos,name) then
+				minetest.show_formspec(
+					name,
+					"landrush:shared_chest",
+					get_shared_chest_formspec(pos)
+				)
+			end
 		end,
 
 		tube = {
