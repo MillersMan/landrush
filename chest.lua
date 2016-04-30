@@ -18,7 +18,7 @@ local log_chest_access = function(pos,name,action)
 		name ..
 		" " ..
 		action ..
-		" the shared chest at " ..
+		" shared chest at " ..
 		minetest.pos_to_string(pos)
 	)
 end
@@ -62,7 +62,7 @@ minetest.register_node("landrush:shared_chest", {
 			local inv = meta:get_inventory()
 			inv:set_size("main", 8*4)
 		end,
-		
+
 		allow_metadata_inventory_move = function(
 				pos, from_list, from_index,
 				to_list, to_index, count, player
@@ -72,7 +72,12 @@ minetest.register_node("landrush:shared_chest", {
 			if landrush.can_interact(pos,name) then
 				return count
 			else
-				log_chest_access_attempt(pos,name,"move stuff in")
+				local meta = minetest.get_meta(pos)
+				local inv = meta:get_inventory()
+				local stack = inv:get_stack(from_list,from_index)
+				local stuff = count .. " " .. stack:get_name()
+				local action = "move " .. stuff .. " in"
+				log_chest_access_attempt(pos,name,action)
 				return 0
 			end
 		end,
@@ -85,12 +90,14 @@ minetest.register_node("landrush:shared_chest", {
 			if landrush.can_interact(pos,name) then
 				return stack:get_count()
 			else
-				log_chest_access_attempt(pos,name,"put stuff in")
+				local stuff = stack:get_count() .. " " ..stack:get_name()
+				local action = "put " .. stuff .. " in"
+				log_chest_access_attempt(pos,name,action)
 				return 0
 			end
 		end,
 		
-	  allow_metadata_inventory_take = function(
+		allow_metadata_inventory_take = function(
 				pos, listname, index, stack, player
 			)
 
@@ -98,7 +105,9 @@ minetest.register_node("landrush:shared_chest", {
 			if landrush.can_interact(pos,name) then
 				return stack:get_count()
 			else
-				log_chest_access_attempt(pos,name,"take stuff from")
+				local stuff = stack:get_count() .. " " ..stack:get_name()
+				local action = "take " .. stuff .. " from"
+				log_chest_access_attempt(pos,name,action)
 				return 0
 			end
 		end,
@@ -112,20 +121,24 @@ minetest.register_node("landrush:shared_chest", {
 			log_chest_access(pos,name,"moves stuff in")
 		end,
 		
-	  on_metadata_inventory_put = function(
+		on_metadata_inventory_put = function(
 				pos, listname, index, stack, player
 			)
 
 			local name = player:get_player_name()
-			log_chest_access(pos,name,"puts stuff in")
+			local stuff = stack:get_count() .. " " ..stack:get_name()
+			local action = "puts " .. stuff .. " in"
+			log_chest_access(pos,name,action)
 		end,
 		
-	  on_metadata_inventory_take = function(
+		on_metadata_inventory_take = function(
 				pos, listname, index, stack, player
 			)
 
 			local name = player:get_player_name()
-			log_chest_access(pos,name,"takes stuff from")
+			local stuff = stack:get_count() .. " " ..stack:get_name()
+			local action = "takes " .. stuff .. " from"
+			log_chest_access(pos,name,action)
 		end,
 
 		tube = {
