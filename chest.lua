@@ -155,6 +155,14 @@ minetest.register_node("landrush:shared_chest", {
 			end
 		end,
 
+		on_blast = function(pos)
+			local drops = {}
+			default.get_inventory_drops(pos, "main", drops)
+			drops[#drops+1] = "landrush:shared_chest"
+			minetest.remove_node(pos)
+			return drops
+		end,
+
 		tube = {
 			insert_object = function(pos, node, stack, direction)
 				local meta = minetest.env:get_meta(pos)
