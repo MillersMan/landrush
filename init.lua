@@ -21,11 +21,15 @@ if ( landrush.config:get_bool("enableHud") ) then
 	dofile(path.."/hud.lua")
 end
 
-minetest.register_privilege("landrush", "Allows player to dig and build anywhere, and use the landrush chat commands.")
+minetest.register_privilege(
+	"landrush",
+	"Allows player to dig and build anywhere, " ..
+	"and use the landrush chat commands."
+)
 
 landrush.load_claims()
 
-	minetest.register_node("landrush:landclaim", {
+minetest.register_node("landrush:landclaim", {
 		description = "Land Rush Land Claim",
 		tiles = {"landrush_landclaim.png"},
 		groups = {oddly_breakable_by_hand=2},
@@ -37,12 +41,12 @@ landrush.load_claims()
 				minetest.chat_send_player(player,"Guests cannot claim land")
 				return itemstack
 			end
-			
+		
 			if ( pointed_thing.above.y < -200 ) then
 				minetest.chat_send_player(player,"You cannot claim below -200")
 				return itemstack
 			end
-			
+		
 			if owner then
 				minetest.chat_send_player(player, "This area is already owned by "..owner)
 			else
@@ -61,19 +65,19 @@ landrush.load_claims()
 				return itemstack
 			end
 		end,
-	})
+})
 
 minetest.register_craft({
-			output = 'landrush:landclaim',
-			recipe = {
-				{'default:stone','default:steel_ingot','default:stone'},
-				{'default:steel_ingot','default:mese_crystal','default:steel_ingot'},
-				{'default:stone','default:steel_ingot','default:stone'}
-			}
-		})
+		output = 'landrush:landclaim',
+		recipe = {
+			{'default:stone','default:steel_ingot','default:stone'},
+			{'default:steel_ingot','default:mese_crystal','default:steel_ingot'},
+			{'default:stone','default:steel_ingot','default:stone'}
+		}
+})
+
 minetest.register_alias("landclaim", "landrush:landclaim")
 minetest.register_alias("landrush:landclaim_b","landrush:landclaim")
-
 
 minetest.register_entity("landrush:showarea",{
 	on_activate = function(self, staticdata, dtime_s)

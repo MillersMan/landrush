@@ -45,17 +45,16 @@ end
  
 function landrush.get_distance(pos1,pos2)
 	if ( pos1 ~= nil and pos2 ~= nil ) then
-		return math.abs(math.floor(math.sqrt( (pos1.x - pos2.x)^2 + (pos1.z - pos2.z)^2 )))
-	else
-		return 0
+		return math.floor(math.sqrt( (pos1.x - pos2.x)^2 + (pos1.z - pos2.z)^2 ))
 	end
+	return 0
 end
 
 function landrush.get_timeonline(name)
-	-- a wrapper for whoison.getTimeOnline since whoison is an optional dependancy
+	-- a wrapper for whoison.getTimeOnline
+	-- since whoison is an optional dependency
 	if ( landrush.whoison == true ) then
 		return (whoison.getTimeOnline(name) / 60)
-	else
-		return -1
 	end
+	return -1
 end

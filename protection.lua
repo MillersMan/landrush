@@ -147,9 +147,8 @@ landrush.default_is_protected = minetest.is_protected
 function minetest.is_protected (pos, name)
 	if ( landrush.can_interact(pos, name) ) then
 		return landrush.default_is_protected(pos,name)
-	else
-		return true
 	end
+	return true
 end
 
 minetest.register_on_protection_violation( landrush.protection_violation )

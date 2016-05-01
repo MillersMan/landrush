@@ -1,7 +1,7 @@
 -- copied config section from technic
 worldpath = minetest.get_worldpath()
 
-landrush.config = Settings(worldpath.."/landrush.conf")
+landrush.config = Settings(worldpath .. "/landrush.conf")
 
 local conf_table = landrush.config:to_table()
 
@@ -29,8 +29,18 @@ end
 -- Create the config file if it doesn't exist
 landrush.config:write() 
 
--- These are items that can be dug in unclaimed areas when landrush.config:get_bool("requireClaim") is true
-landrush.global_dig_list = {["default:ladder"]=true,["default:leaves"]=true,["default:tree"]=true,["default:grass"]=true,["default:grass_1"]=true,["default:grass_2"]=true,["default:grass_3"]=true,["default:grass_4"]=true}
+-- These are items that can be dug in unclaimed areas when
+-- landrush.config:get_bool("requireClaim") is true
+landrush.global_dig_list = {
+	["default:ladder"]=true,
+	["default:leaves"]=true,
+	["default:tree"]=true,
+	["default:grass"]=true,
+	["default:grass_1"]=true,
+	["default:grass_2"]=true,
+	["default:grass_3"]=true,
+	["default:grass_4"]=true
+}
 
 if minetest.get_modpath("whoison") then
 	landrush.whoison=true
