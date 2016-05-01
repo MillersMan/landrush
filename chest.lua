@@ -1,4 +1,14 @@
 -- add a special chest that is shared among the land-possesors
+minetest.register_lbm({
+	name = "landrush:replace_old_shared_chest",
+	nodenames = {"landrush:shared_chest"},
+	action = function(pos, node)
+		local meta = minetest.get_meta(pos);
+		meta:set_string("formspec", nil)
+		minetest.log('action',"lbm cleared formspec from shared_chest at " ..
+			minetest.pos_to_string(pos))
+	end,
+})
 
 local function get_shared_chest_formspec(pos)
 	local spos = pos.x .. "," .. pos.y .. "," .. pos.z
