@@ -10,6 +10,10 @@ function landrush.can_interact(pos, name)
 		return true
 	end
 
+	if ( minetest.check_player_privs(name, {protection_bypass=true}) ) then
+		return true
+	end
+
 	local chunk = landrush.get_chunk(pos)
 
 	if ( landrush.claims[chunk] ~= nil ) then
