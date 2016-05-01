@@ -43,7 +43,7 @@ minetest.register_chatcommand("unclaim", {
 		local inv = player:get_inventory()
 		if owner then
 			if owner == name or minetest.check_player_privs(name, {landrush=true}) then
-				chunk = landrush.get_chunk(pos)
+				local chunk = landrush.get_chunk(pos)
 				if inv:room_for_item("main", landrush.claims[chunk].claimtype) then
 					player:get_inventory():add_item("main", {name=landrush.claims[chunk].claimtype})
 					landrush.claims[chunk] = nil

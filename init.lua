@@ -30,8 +30,8 @@ landrush.load_claims()
 		tiles = {"landrush_landclaim.png"},
 		groups = {oddly_breakable_by_hand=2},
 		on_place = function(itemstack, placer, pointed_thing)
-			owner = landrush.get_owner(pointed_thing.above)
-			player = placer:get_player_name()
+			local owner = landrush.get_owner(pointed_thing.above)
+			local player = placer:get_player_name()
 
 			if player:find("[gG]uest") then
 				minetest.chat_send_player(player,"Guests cannot claim land")
@@ -47,7 +47,7 @@ landrush.load_claims()
 				minetest.chat_send_player(player, "This area is already owned by "..owner)
 			else
 				minetest.env:remove_node(pointed_thing.above)
-				chunk = landrush.get_chunk(pointed_thing.above)
+				local chunk = landrush.get_chunk(pointed_thing.above)
 				landrush.claims[chunk] = {owner=placer:get_player_name(),shared={},claimtype="landclaim"}
 				landrush.save_claims()
 

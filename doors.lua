@@ -9,8 +9,8 @@ if minetest.get_modpath("doors") then
 			if landrush.can_interact(top,name) and landrush.can_interact(bottom, name) then
 				return on_place(itemstack, placer, pointed_thing)
 			else
-				topowner = landrush.get_owner(top)
-				bottomowner = landrush.get_owner(bottom)
+			local topowner = landrush.get_owner(top)
+			local bottomowner = landrush.get_owner(bottom)
 				if topowner and bottomowner and topowner ~= bottomowner then
 					minetest.chat_send_player(name, "Area owned by "..topowner.." and "..bottomowner)
 				elseif topowner then
