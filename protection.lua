@@ -1,143 +1,248 @@
 landrush.offense = {}
 
+function landrush.grief_alert(pos, name)
+
+	local chunk = landrush.get_chunk(pos)
+
+	minetest.chat_send_player(
+		landrush.claims[chunk].owner,
+		"You are being griefed by " ..
+		name ..
+		" at " ..
+		minetest.pos_to_string(pos)
+	)
+
+	for _,shared_player_name in pairs(landrush.claims[chunk].shared) do
+		minetest.chat_send_player(
+			shared_player_name,
+			name ..
+			" is griefing your shared claim at " ..
+			minetest.pos_to_string(pos)
+		)
+	end
+
+	minetest.chat_send_player(
+		name,
+		"You are griefing " ..
+		landrush.claims[chunk].owner
+	)
+end
+
 function landrush.can_interact(pos, name)
 
-	if ( pos.y < -200 or name == '' or name == nil ) then
-		return true
-	end
-
-	if ( minetest.check_player_privs(name, {landrush=true}) ) then
-		return true
-	end
-
-	if ( minetest.check_player_privs(name, {protection_bypass=true}) ) then
+	--if ( pos.y < -200 or name == '' or name == nil ) then
+	if ( pos.y < -200 ) or
+	   ( minetest.check_player_privs(name, {landrush=true}) ) or
+	   ( minetest.check_player_privs(name, {protection_bypass=true}) ) then
 		return true
 	end
 
 	local chunk = landrush.get_chunk(pos)
 
-	if ( landrush.claims[chunk] ~= nil ) then
-		if ( landrush.claims[chunk].shared['*all'] ) then
-			return true
-		end
-	end
-	
-	
-	-- return landrush.claims[chunk] == nil or landrush.claims[chunk].owner == name or landrush.claims[chunk].shared[name]
 	if ( landrush.claims[chunk] == nil ) then
-		if ( landrush.config:get_bool("requireClaim") == true ) then
-			return false
+		if ( landrush.config:get_bool("requireClaim") == false ) then
+			return true
+		end
+		return false
+	else -- landrush.claims[chunk] ~= nil
+		if landrush.claims[chunk].owner == name or
+		   landrush.claims[chunk].shared[name] or
+		   landrush.claims[chunk].shared['*all'] then
+			return true
 		else
-			return true
-		end
-	end
-
-	-- see if the owner is offline, and area is not shared then it's off limits	
-	if ( landrush.claims[chunk].owner ~= name and landrush.config:get_bool("onlineProtection") == false ) then
-		if ( minetest.get_player_by_name(owner) ~= nil ) then
-			minetest.chat_send_player( landrush.claims[chunk].owner, "You are being griefed by "..name.." at "..minetest.pos_to_string(pos) )
-
-			for u,u in pairs(landrush.claims[chunk].shared) do
-				minetest.chat_send_player( u, name.." is griefing your shared claim at "..minetest.pos_to_string(pos) )
+			if landrush.config:get_bool("onlineProtection") == false then
+				landrush.grief_alert(chunk, name)
+				return true
 			end
-
-			minetest.chat_send_player( name, "You are griefing "..landrush.claims[chunk].owner )
-			return true
+			return false
 		end
 	end
-	return landrush.claims[chunk].owner == name or landrush.claims[chunk].shared[name]
 end
 
-function landrush.do_autoban(pos,name) 
-	-- moved this to it's own function so landrush.protection_violation is a little cleaner, and this could be overwritten as well
-	
+function landrush.restore_privs(name, privs, grant_privs)
+
+	for _,priv in ipairs(grant_privs) do
+    privs[priv] = true
+  end
+
+	core.set_player_privs(name, privs)
+
+	core.chat_send_player(name,
+		"Your privileges have been restored."
+	)
+
+	core.chat_send_all(
+		name ..	"'s privileges have been restored."
+	)
+
+	core.log("action",
+		name ..	"'s privileges have been restored."
+	)
+
+end
+
+function landrush.suspend_privs(name, revoke_privs, minutes)
+
+	local privs = core.get_player_privs(name)
+	if not privs then return end
+
+	for _,priv in ipairs(revoke_privs) do
+    privs[priv] = nil
+  end
+
+	core.set_player_privs(name, privs)
+
+	core.after( minutes*60, landrush.restore_privs, name, privs, revoke_privs )
+
+	minetest.chat_send_player(name,
+		"Your privileges have been reduced for " ..
+		tostring(minutes) .. " minutes for trying to grief."
+	)
+
+	minetest.chat_send_all(
+		name ..	"'s privileges have been reduced for trying to grief."
+	)
+
+	minetest.log("action",
+		name ..	"'s privileges have been reduced for trying to grief."
+	)
+
+end
+
+function landrush.moderate(pos,name)
+
 	if ( landrush.offense[name] == nil ) then
-			landrush.offense[name] = {count=0,lastpos=nil,lasttime=os.time(),bancount=0}
-		end
+		landrush.offense[name] = {count=0,lastpos=nil,lasttime=os.time(),bancount=0}
+	end
 
-		local timediff = (os.time() - landrush.offense[name].lasttime)/60
-		local distance = landrush.get_distance(landrush.offense[name].lastpos,pos)
+	local timediff = (os.time() - landrush.offense[name].lasttime)/60
+	local distance = landrush.get_distance(landrush.offense[name].lastpos,pos)
 
-		-- reset offenses after a given time period
-		if timediff > tonumber(landrush.config:get("offenseReset")) then
-			landrush.offense[name].count=0
-		end
+	-- reset offenses after a given time period
+	if timediff > tonumber(landrush.config:get("offenseReset")) then
+		landrush.offense[name].count=0
+	end
+	if timediff > tonumber(landrush.config:get("offenseReset"))*7 then
+		landrush.offense[name].bancount=0
+	end
 
-		-- offense amount starts at 10 and is decreased based on the length of time between offenses
-		-- and the distance from the last offense. This weighted system tries to make it fair for people who aren't
-		-- intentionally griefing
-		offenseAmount = ( 10 - ( timediff / 10 ) ) - ( ( distance / landrush.config:get("chunkSize") ) * 0.5 )
+	local offenseAmount = 0
+	if timediff < 0.01 then
+		-- reduce the offense amount for very rapid attempts that
+		-- may be unnoticed by the player due to lag
+		offenseAmount = 1
+	else
+		-- offense amount starts at 10 and is decreased based on
+		-- the length of time between offenses and the distance
+		-- from the last offense. This weighted system tries to
+		-- tolerate players who aren't intentionally griefing
+		local N = landrush.config:get("chunkSize")
+		offenseAmount = math.max(0, 10 - timediff/6 - distance/N)
+	end
 
-		landrush.offense[name].count=landrush.offense[name].count + offenseAmount
-		minetest.log("action",name.." greifing attempt")
+	landrush.offense[name].count = landrush.offense[name].count + offenseAmount
+	landrush.offense[name].lastpos = pos
+	landrush.offense[name].lasttime = os.time()
 
-		if ( landrush.offense[name].count > tonumber(landrush.config:get("banLevel")) ) then
-			landrush.offense[name].bancount = landrush.offense[name].bancount + 1
+	minetest.log("action",
+		string.format(
+			name ..
+			" attempted to grief. Offense count raised to %.3f.",
+			landrush.offense[name].count
+		)
+	)
 
-			local banlength = landrush.offense[name].bancount * 10
+	if ( landrush.offense[name].count > tonumber(landrush.config:get("banLevel")) ) then
 
-			if ( landrush.offense[name].bancount < 4 ) then
-				minetest.chat_send_player(name, "You have been banned for "..tostring(banlength).." minutes!")
-			else
-				minetest.chat_send_player(name, "You have been banned!")
-			end
+		landrush.offense[name].bancount = landrush.offense[name].bancount + 1
+		landrush.offense[name].count = 0
+		landrush.offense[name].lastpos = nil
 
-			minetest.log("action",name.." has been banned for griefing attempts")
-			minetest.chat_send_all(name.." has been banned for griefing attempts")
+		local term = 3^landrush.offense[name].bancount -- minutes
 
-			if ( chatplus and landrush.config:get("adminUser") ~= nil) then
-				table.insert(chatplus.names[landrush.config:get("adminUser")].messages,"mail from <LandRush>: "..name.." banned for "..tostring(banlength).." minutes for attempted griefing")
-			end
+		if ( landrush.offense[name].bancount < 4 ) then
+
+			local privs = {"interact", "shout"}
+			landrush.suspend_privs(name, privs, term)
+
+		else
 			minetest.ban_player(name)
 
-			landrush.offense[name].count = 0
-			landrush.offense[name].lastpos = nil
+			minetest.log("action",
+				name ..	" has been banned for too many grief attempts."
+			)
 
-			if ( landrush.offense[name].bancount < 4 ) then
-				minetest.after( (banlength * 60), minetest.unban_player_or_ip,name )
+			minetest.chat_send_all(
+				name ..	" has been banned for too many grief attempts."
+			)
+		end
+
+		if minetest.get_modpath("chatplus") then
+			if ( chatplus and landrush.config:get("adminUser") ~= nil) then
+				table.insert(
+					chatplus.names[landrush.config:get("adminUser")].messages,
+					"mail from <LandRush>: " ..
+					name .. " banned for " ..
+					tostring(term) ..
+					" minutes for attempted griefing"
+				)
 			end
-
-			return
 		end
 
-		if ( landrush.offense[name].count > tonumber(landrush.config:get("banWarning")) ) then
-			minetest.chat_send_player(name, "Stop trying to dig in claimed areas or you will be banned!")
-			minetest.chat_send_player(name, "Use /showarea and /landowner to see the protected area and who owns it.")
-			minetest.sound_play("landrush_ban_warning", {to_player=name,gain = 10.0})
-		end
+		return
+	end
 
-		landrush.offense[name].lasttime = os.time()
-		landrush.offense[name].lastpos = pos
+	if ( landrush.offense[name].count > tonumber(landrush.config:get("banWarning")) ) then
+
+		minetest.chat_send_player(name,
+			"Stop trying to dig in claimed areas or you will be banned!"
+		)
+
+		minetest.chat_send_player(name,
+			"Use /showarea and /landowner to see the protected area and who owns it."
+		)
+
+		minetest.sound_play("landrush_ban_warning", {to_player=name,gain = 10.0})
+
+	end
+
 end
 
-function landrush.protection_violation(pos,name)
+function landrush.protection_violation(pos, name)
 	-- this function can be overwritten to apply whatever discipline the server admin wants
 	-- this is the default discipline
-	
+
 	local player = minetest.get_player_by_name(name)
-	
 	if ( player == nil ) then
 	  return
 	end
-	
+
+	-- inform
 	local owner = landrush.get_owner(pos)
-	
-	if ( landrush.config:get_bool("requireClaim") == true ) then
-		if ( owner == nil ) then
-			minetest.chat_send_player(name,"This area is unowned, but you must claim it to build or mine")
-			return true
-		end	
+	if ( owner == nil ) and
+	   ( landrush.config:get_bool("requireClaim") == true ) then
+		minetest.chat_send_player(name,
+			"This area is unowned, but you must claim it to build or mine"
+		)
+		return true
+	else
+		minetest.chat_send_player(name,
+			"Area owned by " ..
+			tostring(owner) ..
+			" stop trying to dig here!"
+		)
 	end
-	
-	minetest.chat_send_player(name, "Area owned by "..tostring(owner).." stop trying to dig here!")
-	if ( tonumber(landrush.config:get("noDamageTime")) > landrush.get_timeonline(name) ) then
+
+	-- discipline
+	if ( tonumber(landrush.config:get("noDamageTime")) >
+	              landrush.get_timeonline(name) ) then
 		player:set_hp( player:get_hp() - landrush.config:get("offenseDamage") )
 	end
-	
-	if ( landrush.config:get_bool("autoBan") == true ) then
-		if ( tonumber(landrush.config:get("noBanTime")) > landrush.get_timeonline(name) ) then
-			landrush.do_autoban(pos,name)
-		end
+
+	if ( landrush.config:get_bool("autoBan") == true ) and
+	   ( tonumber(landrush.config:get("noBanTime")) >
+	              landrush.get_timeonline(name) ) then
+		landrush.moderate(pos,name)
 	end
 
 end
