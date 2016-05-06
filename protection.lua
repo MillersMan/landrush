@@ -257,30 +257,3 @@ function minetest.is_protected (pos, name)
 end
 
 minetest.register_on_protection_violation( landrush.protection_violation )
-
--- I'm keeping this just for the TNT workaround
-landrush.default_place = minetest.item_place
-
-function minetest.item_place(itemstack, placer, pointed_thing)
-	local name = placer:get_player_name()
-	if itemstack:get_name() == "tnt:tnt" or itemstack:get_name() == "tnt:tnt_burning" then
-		local pos = pointed_thing.above
-		local temp_pos = pos
-		local r = tonumber(minetest.setting_get("tnt_radius") or 3)
-		local corners = { {x=pos.x+r, y=pos.y+r, z=pos.z+r},
-		                  {x=pos.x+r, y=pos.y+r, z=pos.z-r},
-		                  {x=pos.x+r, y=pos.y-r, z=pos.z+r},
-		                  {x=pos.x+r, y=pos.y-r, z=pos.z-r},
-		                  {x=pos.x-r, y=pos.y+r, z=pos.z+r},
-		                  {x=pos.x-r, y=pos.y+r, z=pos.z-r},
-		                  {x=pos.x-r, y=pos.y-r, z=pos.z+r},
-		                  {x=pos.x-r, y=pos.y-r, z=pos.z-r} }
-		for _, pos in ipairs(corners) do
-			if name ~= landrush.get_owner( pos ) then
-				minetest.chat_send_player( name, "You may only use TNT within your claimed areas." )
-				return itemstack
-			end
-		end
-	end
-	return landrush.default_place(itemstack, placer, pointed_thing)
-end
