@@ -28,6 +28,23 @@ function landrush.grief_alert(pos, name)
 	)
 end
 
+function landrush.can_interact_in_radius(pos, name, r)
+	local corners = { {x=pos.x+r, y=pos.y+r, z=pos.z+r},
+	                  {x=pos.x+r, y=pos.y+r, z=pos.z-r},
+	                  {x=pos.x+r, y=pos.y-r, z=pos.z+r},
+	                  {x=pos.x+r, y=pos.y-r, z=pos.z-r},
+	                  {x=pos.x-r, y=pos.y+r, z=pos.z+r},
+	                  {x=pos.x-r, y=pos.y+r, z=pos.z-r},
+	                  {x=pos.x-r, y=pos.y-r, z=pos.z+r},
+	                  {x=pos.x-r, y=pos.y-r, z=pos.z-r} }
+	for _, corner in ipairs(corners) do
+		if not landrush.can_interact(corner,"") then
+			return false
+		end
+	end
+	return true
+end
+
 function landrush.can_interact(pos, name)
 
 	--if ( pos.y < -200 or name == '' or name == nil ) then

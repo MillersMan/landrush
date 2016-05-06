@@ -1,20 +1,28 @@
-if minetest.get_modpath("fire") and rawget(_G, "fire") then
-	landrush.default_flame_should_extinguish = fire.flame_should_extinguish
-
-	function fire.flame_should_extinguish(pos)
-		corner0 = landrush.can_interact({x=pos.x-1,y=pos.y-1,z=pos.z-1},"-!-")
-		corner1 = landrush.can_interact({x=pos.x-1,y=pos.y-1,z=pos.z+1},"-!-")
-		corner2 = landrush.can_interact({x=pos.x-1,y=pos.y+1,z=pos.z-1},"-!-")
-		corner3 = landrush.can_interact({x=pos.x-1,y=pos.y+1,z=pos.z+1},"-!-")
-		corner4 = landrush.can_interact({x=pos.x+1,y=pos.y-1,z=pos.z-1},"-!-")
-		corner5 = landrush.can_interact({x=pos.x+1,y=pos.y-1,z=pos.z+1},"-!-")
-		corner6 = landrush.can_interact({x=pos.x+1,y=pos.y+1,z=pos.z-1},"-!-")
-		corner7 = landrush.can_interact({x=pos.x+1,y=pos.y+1,z=pos.z+1},"-!-")
-		if corner0 and corner1 then
-			return landrush.default_flame_should_extinguish(pos)
-		else
-			return true
+local def = minetest.registered_nodes["fire:basic_flame"]
+if def then
+	-- Do not allow flames in or around protected areas
+	local default_on_construct = def.on_construct
+	def.on_construct = function(pos)
+		if landrush.can_interact_in_radius(pos, "", 1) then
+			return default_on_construct(pos)
 		end
+		minetest.remove_node(pos)
 	end
-end
 
+	-- Extinguish flames in and around protected areas
+	-- this is needed because voxelmanip can set a node without
+	-- triggering the on_construct callback
+	minetest.register_abm({
+		nodenames = {"fire:basic_flame"},
+		interval = 3,
+		chance = 1,
+		catchup = true,
+		action = function(pos)
+			if not landrush.can_interact_in_radius(pos, "", 1) then
+				minetest.remove_node(pos)
+				minetest.sound_play("fire_extinguish_flame",
+					{pos = pos, max_hear_distance = 16, gain = 0.25})
+			end
+		end
+	})
+end
