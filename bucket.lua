@@ -1,55 +1,49 @@
-if minetest.get_modpath("bucket") then
-	minetest.register_craftitem(":bucket:bucket_empty", {
-		description = "Emtpy bucket",
-		inventory_image = "bucket.png",
-		stack_max = 1,
-		liquids_pointable = true,
-		on_use = function(itemstack, user, pointed_thing)
-		-- Must be pointing to node
-			if pointed_thing.type ~= "node" then
-				return
-			end
-		-- Check if pointing to a liquid source
-			n = minetest.env:get_node(pointed_thing.under)
-			liquiddef = bucket.liquids[n.name]
-			if liquiddef ~= nil and liquiddef.source == n.name and liquiddef.itemname ~= nil then
-				local player = user:get_player_name()
-				if landrush.can_interact(pointed_thing.under, player) then
-					minetest.env:add_node(pointed_thing.under, {name="air"})
-					return {name=liquiddef.itemname}
-				else
-					owner = landrush.get_owner(pointed_thing.under)
-					minetest.chat_send_player(user:get_player_name(), "Area owned by "..owner)
-				end
-			end
-		end,
-	})
+local liquid_itemnames = {}
+for key, value in pairs(bucket.liquids) do
+	if key == value.source then
+		table.insert(liquid_itemnames, value.itemname)
+	end
+end
 
-	for key, value in pairs(bucket.liquids) do
-		if minetest.registered_items[value.itemname].on_use then
-			local item = minetest.registered_items[value.itemname]
-			local on_use = item.on_use
-			function item.on_use(itemstack, user, pointed_thing)
-				if pointed_thing.type ~= "node" then
-					return
-				end
-				n = minetest.env:get_node(pointed_thing.under)
-				local player = user:get_player_name()
-				if minetest.registered_nodes[n.name].buildable_to then
-					if landrush.can_interact(pointed_thing.under, player) then
-						return on_use(itemstack, user, pointed_thing)
-					else
-						minetest.chat_send_player(player, "Area owned by "..landrush.get_owner(pointed_thing.above))
-					end
+for _, liquid_itemname in ipairs(liquid_itemnames) do
+	local idef = minetest.registered_items[liquid_itemname]
+	if idef then
+		-- Override on_place for liquids
+		local default_on_place = idef.on_place
+		idef.on_place = function(itemstack, user, pointed_thing)
+			-- find the position we are trying to place the liquid
+			local node = minetest.get_node_or_nil(pointed_thing.under)
+			local ndef
+			if node then
+				ndef = minetest.registered_nodes[node.name]
+			end
+			local pos = nil
+			if ndef and ndef.buildable_to then
+				pos = pointed_thing.under
+			else
+				pos = pointed_thing.above
+			end
+
+			local name = ''
+			if user then
+				name = user:get_player_name()
+			end
+
+			-- don't allow placement above 140
+			-- don't allow placement to unclaimed areas above -200
+			if pos then
+				if pos.y < -200 then
+					return default_on_place(itemstack, user, pointed_thing)
+				elseif pos.y > 140 then
+					minetest.chat_send_player(name, 'You can not place liquids above 140.')
 				else
-					if landrush.can_interact(pointed_thing.above, player) then
-						return on_use(itemstack, user, pointed_thing)
+					if landrush.claims[landrush.get_chunk(pos)] == nil then
+						minetest.chat_send_player(name, 'You can not place liquids in unclaimed areas.')
 					else
-						minetest.chat_send_player(player, "Area owned by "..landrush.get_owner(pointed_thing.above))
+						return default_on_place(itemstack, user, pointed_thing)
 					end
 				end
 			end
 		end
 	end
 end
-

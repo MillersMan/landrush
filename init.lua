@@ -119,15 +119,18 @@ if ( minetest.get_modpath("money2") ) then
 	dofile(path.."/landsale.lua")
 end
 
-if ( minetest.get_modpath("fire") ) then
+if ( minetest.get_modpath('fire') ) then
 	minetest.log('action','[landrush] adding fire protection to claimed areas')
-	dofile(path.."/fire.lua")
+	dofile(path..'/fire.lua')
 end
 
+if ( minetest.get_modpath('bucket') ) then
+	minetest.log('action','[landrush] adding liquids placement protection')
+  dofile(path..'/bucket.lua')
+end
 minetest.after(0, function ()
 
 dofile(path.."/default.lua")
---dofile(path.."/bucket.lua")
 dofile(path.."/doors.lua")
 dofile(path.."/chatcommands.lua")
 --dofile(path.."/screwdriver.lua")
