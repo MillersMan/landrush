@@ -49,6 +49,7 @@ minetest.register_chatcommand("unclaim", {
 					landrush.claims[chunk] = nil
 					landrush.save_claims()
 					minetest.chat_send_player(name, "You renounced your claim on this area.")
+					minetest.log("action", "landrush chunk (" .. chunk ..	") unclaimed by " .. owner)
 				else
 					minetest.chat_send_player(name, "Your inventory is full.")
 				end

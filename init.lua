@@ -61,6 +61,7 @@ minetest.register_node("landrush:landclaim", {
 				minetest.env:add_entity(entpos, "landrush:showarea")
 
 				minetest.chat_send_player(landrush.claims[chunk].owner, "You now own this area.")
+				minetest.log("action", "landrush chunk (" .. chunk .. ") claimed by " .. player)
 				itemstack:take_item()
 				return itemstack
 			end
