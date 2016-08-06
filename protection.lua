@@ -46,6 +46,7 @@ function landrush.can_interact_in_radius(pos, name, r)
 end
 
 function landrush.can_interact(pos, name)
+	if not pos or not name then return false end
 
 	--if ( pos.y < -200 or name == '' or name == nil ) then
 	if ( pos.y < -200 ) or
