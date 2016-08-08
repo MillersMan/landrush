@@ -192,26 +192,7 @@ minetest.register_node("landrush:shared_chest", {
 })
 
 minetest.register_craft({
+		type = 'shapeless',
 		output = 'landrush:shared_chest',
-		recipe = {
-			{'group:wood','group:wood','group:wood'},
-			{'group:wood','landrush:landclaim','group:wood'},
-			{'group:wood','group:wood','group:wood'}
-		}
-})
-
-minetest.register_craft({
-		output = 'landrush:shared_chest',
-		recipe = {
-			{'landrush:landclaim'},
-			{'default:chest'}
-		}
-})
-
-minetest.register_craft({
-		output = 'landrush:shared_chest',
-		recipe = {
-			{'landrush:landclaim'},
-			{'default:chest_locked'}
-		}
+		recipe = {'default:chest_locked', 'default:chest_locked'},
 })

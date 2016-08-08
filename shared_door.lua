@@ -21,10 +21,7 @@ for _,v in ipairs(types) do
 end
 
 minetest.register_craft({
-	output = 'doors:landrush_shared_door',
-	recipe = {
-		{'default:steel_ingot','default:steel_ingot',''},
-		{'default:steel_ingot','landrush:landclaim',''},
-		{'default:steel_ingot','default:steel_ingot',''}
-	}
+	type = 'shapeless',
+	output = 'landrush:shared_door',
+	recipe = {'doors:door_steel', 'doors:door_steel'},
 })
