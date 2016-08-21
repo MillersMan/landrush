@@ -54,6 +54,7 @@ minetest.register_node("landrush:landclaim", {
 				local chunk = landrush.get_chunk(pointed_thing.above)
 				landrush.claims[chunk] = {owner=placer:get_player_name(),shared={},claimtype="landclaim"}
 				landrush.save_claims()
+				if stats then stats.increase_stat(placer:get_player_name(), 'land_claims', 1) end
 
 				-- showarea
 				local entpos = landrush.get_chunk_center(pointed_thing.above)
@@ -128,6 +129,23 @@ if ( minetest.get_modpath('bucket') ) then
 	minetest.log('action','[landrush] adding liquids placement protection')
   dofile(path..'/bucket.lua')
 end
+
+if minetest.get_modpath("stats") then
+	stats.register_stat({
+		name = "land_claims",
+		description = function(value)
+			return " - Land claims: "..value
+		end,
+	})
+
+	stats.register_stat({
+		name = "land_shares",
+		description = function(value)
+			return " - Land shares: "..value
+		end,
+	})
+end
+
 minetest.after(0, function ()
 
 dofile(path.."/default.lua")

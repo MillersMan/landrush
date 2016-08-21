@@ -1,3 +1,7 @@
+local stats_enabled = false
+if minetest.get_modpath("stats") then
+	stats_enabled = true
+end
 
 minetest.register_chatcommand("landowner", {
 	params = "",
@@ -46,6 +50,12 @@ minetest.register_chatcommand("unclaim", {
 				local chunk = landrush.get_chunk(pos)
 				if inv:room_for_item("main", landrush.claims[chunk].claimtype) then
 					player:get_inventory():add_item("main", {name=landrush.claims[chunk].claimtype})
+					if stats_enabled then
+						stats.decrease_stat(player, 'land_claims', 1)
+						for name,_ in pairs(landrush.claims[chunk].shared) do
+							stats.decrease_stat(name, 'land_shares', 1)
+						end
+					end
 					landrush.claims[chunk] = nil
 					landrush.save_claims()
 					minetest.chat_send_player(name, "You renounced your claim on this area.")
@@ -73,6 +83,10 @@ minetest.register_chatcommand("sharearea", {
 		if owner then
 			if ( owner == name and name ~= param ) or minetest.check_player_privs(name, {landrush=true}) then
 				if minetest.env:get_player_by_name(param) or param=="*all" then
+					if stats_enabled and param ~= "*all"
+					   and not landrush.claims[landrush.get_chunk(pos)].shared[param] then
+						stats.increase_stat(param, 'land_shares', 1)
+					end
 					landrush.claims[landrush.get_chunk(pos)].shared[param] = param
 					landrush.save_claims()
 					minetest.chat_send_player(name, param.." may now edit this area.")
@@ -100,6 +114,10 @@ minetest.register_chatcommand("unsharearea", {
 		if owner then
 			if owner == name or minetest.check_player_privs(name, {landrush=true}) then
 				if name ~= param then
+					if stats_enabled and param ~= "*all"
+					   and landrush.claims[landrush.get_chunk(pos)].shared[param] then
+						stats.decrease_stat(param, 'land_shares', 1)
+					end
 					landrush.claims[landrush.get_chunk(pos)].shared[param] = nil
 					landrush.save_claims()
 					minetest.chat_send_player(name, param.." may no longer edit this area.")
@@ -159,6 +177,10 @@ minetest.register_chatcommand("shareall", {
             local qdone = 0
             for k,v in pairs(landrush.claims) do
                 if landrush.claims[k].owner == name then
+										if stats_enabled and param ~= "*all"
+											and not landrush.claims[k].shared[param] then
+											stats.increase_stat(param, 'land_shares', 1)
+										end
                     landrush.claims[k].shared[param] = param
                     qdone = qdone + 1
                 end
@@ -188,6 +210,10 @@ minetest.register_chatcommand("unshareall", {
             local qdone = 0
             for k,v in pairs(landrush.claims) do
                 if landrush.claims[k].owner == name then
+										if stats_enabled and param ~= "*all"
+											and landrush.claims[k].shared[param] then
+											stats.decrease_stat(param, 'land_shares', 1)
+										end
                     landrush.claims[k].shared[param] = nil
                     qdone = qdone + 1
                 end
