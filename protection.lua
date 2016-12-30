@@ -254,7 +254,9 @@ function landrush.protection_violation(pos, name)
 	-- discipline
 	if ( tonumber(landrush.config:get("noDamageTime")) >
 	              landrush.get_timeonline(name) ) then
-		player:set_hp( player:get_hp() - landrush.config:get("offenseDamage") )
+		minetest.after(0.01, function()
+			player:set_hp( player:get_hp() - landrush.config:get("offenseDamage") )
+		end)
 	end
 
 	if ( landrush.config:get_bool("autoBan") == true ) and
