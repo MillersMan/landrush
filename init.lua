@@ -16,7 +16,7 @@ dofile(path.."/protection.lua")
 dofile(path.."/shared_door.lua")
 dofile(path.."/chest.lua")
 dofile(path.."/sign.lua")
-dofile(path..'shared_inbox.lua')
+dofile(path..'/shared_inbox.lua')
 
 if ( landrush.config:get_bool("enableHud") ) then
 	dofile(path.."/hud.lua")
