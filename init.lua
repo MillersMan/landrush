@@ -147,15 +147,11 @@ if minetest.get_modpath("stats") then
 	})
 end
 
-minetest.after(0, function ()
-
 dofile(path.."/default.lua")
 --dofile(path.."/doors.lua")
 dofile(path.."/chatcommands.lua")
 --dofile(path.."/screwdriver.lua")
 dofile(path.."/snow.lua")
-
-end )
 
 minetest.log(
 	'action',
