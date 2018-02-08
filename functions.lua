@@ -32,6 +32,13 @@ function landrush.get_chunk_center(pos)
 end
 
 function landrush.get_owner(pos)
+	if ( pos.x < tonumber(landrush.config:get("min_x")) ) or
+	   ( pos.x > tonumber(landrush.config:get("max_x")) ) or
+	   ( pos.z < tonumber(landrush.config:get("min_z")) ) or
+	   ( pos.z > tonumber(landrush.config:get("max_z")) ) then
+		return landrush.config:get("border_owner")
+	end
+
 	local chunk = landrush.get_chunk(pos)
 	if landrush.claims[chunk] then
 		return landrush.claims[chunk].owner

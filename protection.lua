@@ -49,9 +49,19 @@ function landrush.can_interact(pos, name)
 	if not pos or not name then return false end
 
 	--if ( pos.y < -200 or name == '' or name == nil ) then
-	if ( pos.y < -200 ) or
-	   ( minetest.check_player_privs(name, {landrush=true}) ) or
+	if ( minetest.check_player_privs(name, {landrush=true}) ) or
 	   ( minetest.check_player_privs(name, {protection_bypass=true}) ) then
+		return true
+	end
+
+	if ( pos.x < tonumber(landrush.config:get("min_x")) ) or
+	   ( pos.x > tonumber(landrush.config:get("max_x")) ) or
+	   ( pos.z < tonumber(landrush.config:get("min_z")) ) or
+	   ( pos.z > tonumber(landrush.config:get("max_z")) ) then
+		return false
+	end
+
+	if ( pos.y < -200 ) then
 		return true
 	end
 

@@ -17,7 +17,12 @@ local defaults = {
 	chunkSize = "16",
 	enableHud = "true",
 	noBanTime = 240,
-	noDamageTime = 600
+	noDamageTime = 600,
+	min_x = -4300,
+	max_x = 4300,
+	min_z = -4300,
+	max_z = 4300,
+	border_owner = "border-guard"
 }
 
 for k, v in pairs(defaults) do
